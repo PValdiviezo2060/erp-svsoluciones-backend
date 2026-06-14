@@ -1,0 +1,42 @@
+package {{package}};
+
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Response;
+import jakarta.validation.constraints.*;
+import jakarta.validation.Valid;
+import java.util.UUID;
+import java.util.List;
+import java.util.Map;
+
+{{#imports}}import {{import}};
+{{/imports}}
+
+{{#operations}}
+    @Path("{{commonPath}}")
+    public interface {{classname}} {
+
+    {{#operation}}
+        {{#hasHeaderParams}}
+            @lombok.Data
+            public static class Header{{operationId}} {
+            {{#headerParams}}
+                {{>beanValidation}}
+                @HeaderParam("{{baseName}}")
+                private {{{dataType}}} {{paramName}};
+
+            {{/headerParams}}
+            }
+        {{/hasHeaderParams}}
+        @{{httpMethod}}
+        @Path("{{path}}")
+        {{#hasConsumes}}@Consumes({ {{#consumes}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/consumes}} }){{/hasConsumes}}
+        {{#hasProduces}}@Produces({ {{#produces}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/produces}} }){{/hasProduces}}
+        Response {{operationId}}(
+        {{#hasHeaderParams}}@BeanParam Header{{operationId}} headers{{#hasPathParams}}, {{/hasPathParams}}{{^hasPathParams}}{{#hasQueryParams}}, {{/hasQueryParams}}{{^hasQueryParams}}{{#hasBodyParam}}, {{/hasBodyParam}}{{/hasQueryParams}}{{/hasPathParams}}{{/hasHeaderParams}}
+        {{#pathParams}}@PathParam("{{baseName}}") {{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{#-last}}{{#hasQueryParams}}, {{/hasQueryParams}}{{^hasQueryParams}}{{#hasBodyParam}}, {{/hasBodyParam}}{{/hasQueryParams}}{{/-last}}{{/pathParams}}
+        {{#queryParams}}@QueryParam("{{baseName}}") {{#defaultValue}}@DefaultValue("{{{defaultValue}}}") {{/defaultValue}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{#-last}}{{#hasBodyParam}}, {{/hasBodyParam}}{{/-last}}{{/queryParams}}
+        {{#hasBodyParam}}{{#bodyParam}}{{{dataType}}} {{paramName}}{{/bodyParam}}{{/hasBodyParam}}
+        );
+    {{/operation}}
+    }
+{{/operations}}

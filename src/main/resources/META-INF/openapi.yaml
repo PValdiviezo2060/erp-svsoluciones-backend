@@ -1,0 +1,215 @@
+openapi: 3.0.0
+info:
+  title: ERP Inventory API
+  version: 1.0.0
+  description: API de gestión de inventario para SVSoluciones.
+
+paths:
+  /inventory/v1/products:
+    get:
+      operationId: listProducts
+      summary: Listar productos
+      tags: [Product]
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - $ref: '#/components/parameters/CallerNameHeader'
+        - $ref: '#/components/parameters/AppCodeHeader'
+        - name: page
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: size
+          in: query
+          schema:
+            type: integer
+            enum: [5, 10, 25, 50]
+            default: 10
+      responses:
+        '200':
+          description: Lista de productos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductPageResponse' }
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      operationId: createProduct
+      summary: Crear un nuevo producto
+      tags: [Product]
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - $ref: '#/components/parameters/CallerNameHeader'
+        - $ref: '#/components/parameters/AppCodeHeader'
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductRequest' }
+      responses:
+        '201': { description: Producto creado }
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /inventory/v1/products/{sku}:
+    get:
+      operationId: getProductBySku
+      summary: Obtener producto por SKU
+      tags: [Product]
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - $ref: '#/components/parameters/CallerNameHeader'
+        - $ref: '#/components/parameters/AppCodeHeader'
+        - name: sku
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Producto encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductResponse' }
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+
+    patch:
+      operationId: patchProductBySku
+      summary: Actualizar parcialmente un producto
+      tags: [Product]
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - $ref: '#/components/parameters/CallerNameHeader'
+        - $ref: '#/components/parameters/AppCodeHeader'
+        - name: sku
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductPatchRequest' }
+      responses:
+        '204': { description: Producto actualizado }
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      operationId: deleteProductBySku
+      summary: Eliminar un producto
+      tags: [Product]
+      parameters:
+        - $ref: '#/components/parameters/RequestIdHeader'
+        - $ref: '#/components/parameters/CallerNameHeader'
+        - $ref: '#/components/parameters/AppCodeHeader'
+        - name: sku
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Producto eliminado }
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+
+components:
+  parameters:
+    RequestIdHeader:
+      name: request-id
+      in: header
+      required: true
+      schema: { type: string }
+      example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    CallerNameHeader:
+      name: caller-name
+      in: header
+      required: true
+      schema: { type: string, enum: [admin_ventas, supervisor_almacen, sistema] }
+      example: "admin_ventas"
+    AppCodeHeader:
+      name: app-code
+      in: header
+      required: true
+      schema: { type: string, enum: [ERP-FRONTEND, MOBILE-APP] }
+      example: "ERP-FRONTEND"
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp: { type: string, format: date-time }
+        status: { type: integer }
+        error: { type: string }
+        message: { type: string }
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              code: { type: string }
+              type: { type: string }
+              description: { type: string }
+
+    ProductRequest:
+      type: object
+      required: [sku, name, retailPrice, wholesalePrice, expectedMargin, allowNegativeStock]
+      example:
+        sku: "EPP-CAS-3M-BCO"
+        name: "Casco de Seguridad 3M H700 BL"
+        wholesalePrice: 17.50
+        retailPrice: 22.00
+        expectedMargin: 35.00
+        allowNegativeStock: false
+      properties:
+        sku: { type: string }
+        name: { type: string }
+        wholesalePrice: { type: number, format: double }
+        retailPrice: { type: number, format: double }
+        expectedMargin: { type: number, format: double }
+        allowNegativeStock: { type: boolean }
+
+    ProductResponse:
+      type: object
+      properties:
+        sku: { type: string }
+        name: { type: string }
+        wholesalePrice: { type: number, format: double }
+        retailPrice: { type: number, format: double }
+        expectedMargin: { type: number, format: double }
+        allowNegativeStock: { type: boolean }
+      example:
+        sku: "EPP-CAS-3M-BCO"
+        name: "Casco de Seguridad 3M H700 BL"
+        wholesalePrice: 17.50
+        retailPrice: 22.00
+        expectedMargin: 35.00
+        allowNegativeStock: false
+
+    ProductPatchRequest:
+      type: object
+      example: { "name": "Casco de Seguridad 3M V2", "retailPrice": 28.00 }
+      properties:
+        name: { type: string }
+        wholesalePrice: { type: number, format: double }
+        retailPrice: { type: number, format: double }
+        allowNegativeStock: { type: boolean }
+
+    ProductPageResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ProductResponse' }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+        currentPage: { type: integer }
+
+  responses:
+    ErrorResponse:
+      description: Error en la operación
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }

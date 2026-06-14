@@ -1,0 +1,20 @@
+{{#required}}
+    @NotNull(message = "El campo {{paramName}}{{^paramName}}{{name}}{{/paramName}} es obligatorio.")
+{{/required}}
+{{#pattern}}
+    @Pattern(regexp = "{{{pattern}}}", message = "El campo {{paramName}}{{^paramName}}{{name}}{{/paramName}} tiene un formato inválido.")
+{{/pattern}}
+{{#minLength}}
+    @Size(min = {{minLength}}{{#maxLength}}, max = {{maxLength}}{{/maxLength}}, message = "El campo {{paramName}}{{^paramName}}{{name}}{{/paramName}} está fuera de rango (Mínimo: {{minLength}}{{#maxLength}}, Máximo: {{maxLength}}{{/maxLength}})")
+{{/minLength}}
+{{^minLength}}
+    {{#maxLength}}
+        @Size(max = {{maxLength}}, message = "El campo {{paramName}}{{^paramName}}{{name}}{{/paramName}} no debe exceder los {{maxLength}} caracteres.")
+    {{/maxLength}}
+{{/minLength}}
+{{#minimum}}
+    @Min(value = {{minimum}}, message = "El valor de {{paramName}}{{^paramName}}{{name}}{{/paramName}} debe ser mayor o igual a {{minimum}}")
+{{/minimum}}
+{{#maximum}}
+    @Max(value = {{maximum}}, message = "El valor de {{paramName}}{{^paramName}}{{name}}{{/paramName}} debe ser menor o igual a {{maximum}}")
+{{/maximum}}
